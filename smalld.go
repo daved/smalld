@@ -1,16 +1,17 @@
 package main
 
-import "os"
-import "log"
-import "fmt"
-import "strconv"
 import (
 	"database/sql"
+	"encoding/json"
+	"fmt"
+	"log"
+	"net/http"
+	"net/url"
+	"os"
+	"strconv"
+
 	_ "github.com/lib/pq"
 )
-import "net/http"
-import "net/url"
-import "encoding/json"
 
 var db *sql.DB //to share with our handlers
 
