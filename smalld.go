@@ -114,14 +114,14 @@ func main() {
 	log.Println("smalld starting")
 
 	dbConnection := os.Getenv("SMALLD_DB_CONNECTION")
-	urlBase := os.Getenv("SMALLD_URL_BASE")
+	//urlBase := os.Getenv("SMALLD_URL_BASE")
 	listenAddress := os.Getenv("SMALLD_LISTEN_ADDRESS")
-	options := os.Getenv("SMALLD_OPTIONS") //override command line flags
+	//options := os.Getenv("SMALLD_OPTIONS") //override command line flags
 
 	log.Println("SMALLD_DB_CONNECTION:", dbConnection)
-	log.Println("SMALLD_URL_BASE:", urlBase)
+	//log.Println("SMALLD_URL_BASE:", urlBase)
 	log.Println("SMALLD_LISTEN_ADDRESS", listenAddress)
-	log.Println("SMALLD_OPTIONS:", options)
+	//log.Println("SMALLD_OPTIONS:", options)
 
 	var err error
 	db, err = sql.Open("postgres", dbConnection)
