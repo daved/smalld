@@ -22,31 +22,31 @@ func safeValues(v *url.Values) bool {
 }
 
 func makePoint(v *url.Values) string {
-	point := fmt.Sprintf("POINT(%s %s)", v.Get("lon"), v.Get("lat"))
+	p := fmt.Sprintf("POINT(%s %s)", v.Get("lon"), v.Get("lat"))
 
-	return point
+	return p
 }
 
 func recordlocations(v *url.Values) {
-	txn, err := db.Begin()
+	tx, err := db.Begin()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	p := makePoint(v)
-	label := fmt.Sprintf("%s", v.Get("label"))
+	lbl := fmt.Sprintf("%s", v.Get("label"))
 
 	acc, err := strconv.ParseFloat(v.Get("acc"), 64)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	_, err = txn.Exec("insert into locations ( label, acc, geom ) values ( $1, $2, ST_PointFromText( $3, 4326) )", label, acc, p)
+	_, err = tx.Exec("insert into locations ( label, acc, geom ) values ( $1, $2, ST_PointFromText( $3, 4326) )", lbl, acc, p)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = txn.Commit()
+	err = tx.Commit()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -60,17 +60,17 @@ func LocationHandler(w http.ResponseWriter, req *http.Request) {
 
 	if req.Method == "GET" {
 		if req.URL.RawQuery != "" {
-			values, err := url.ParseQuery(req.URL.RawQuery)
+			vals, err := url.ParseQuery(req.URL.RawQuery)
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			log.Println(values)
+			log.Println(vals)
 
-			if safeValues(&values) {
-				p := makePoint(&values)
+			if safeValues(&vals) {
+				p := makePoint(&vals)
 
-				go recordlocations(&values)
+				go recordlocations(&vals)
 
 				log.Println("point:", p)
 
@@ -113,18 +113,18 @@ func LocationHandler(w http.ResponseWriter, req *http.Request) {
 func main() {
 	log.Println("smalld starting")
 
-	dbConnection := os.Getenv("SMALLD_DB_CONNECTION")
+	dbc := os.Getenv("SMALLD_DB_CONNECTION")
 	//urlBase := os.Getenv("SMALLD_URL_BASE")
-	listenAddress := os.Getenv("SMALLD_LISTEN_ADDRESS")
+	addr := os.Getenv("SMALLD_LISTEN_ADDRESS")
 	//options := os.Getenv("SMALLD_OPTIONS") //override command line flags
 
-	log.Println("SMALLD_DB_CONNECTION:", dbConnection)
+	log.Println("SMALLD_DB_CONNECTION:", dbc)
 	//log.Println("SMALLD_URL_BASE:", urlBase)
-	log.Println("SMALLD_LISTEN_ADDRESS", listenAddress)
+	log.Println("SMALLD_LISTEN_ADDRESS", addr)
 	//log.Println("SMALLD_OPTIONS:", options)
 
 	var err error
-	db, err = sql.Open("postgres", dbConnection)
+	db, err = sql.Open("postgres", dbc)
 	err = db.Ping()
 	if err != nil {
 		log.Fatal(err)
@@ -134,5 +134,5 @@ func main() {
 	http.HandleFunc("/location", LocationHandler)
 	log.Println("registered LocationHandler")
 
-	http.ListenAndServe(listenAddress, nil)
+	http.ListenAndServe(addr, nil)
 }

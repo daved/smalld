@@ -13,55 +13,55 @@ import (
 )
 
 func TestLocationHandlerResponseOK(t *testing.T) {
-	response := httptest.NewRecorder()
-	request, _ := http.NewRequest("GET", "/location", nil)
+	res := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/location", nil)
 
-	LocationHandler(response, request)
-	log.Println("/location response:", response.Code)
+	LocationHandler(res, req)
+	log.Println("/location response:", res.Code)
 
-	if response.Code != http.StatusNoContent {
+	if res.Code != http.StatusNoContent {
 		t.Fatalf("Bad Response")
 	}
 }
 
 func TestLocationHandlerResponseQuery(t *testing.T) {
-	response := httptest.NewRecorder()
-	request, _ := http.NewRequest("GET", "http://localhost:8000/location?lat=44.09491559960329&lon=-123.0965916720434&acc=5&label=foo", nil)
+	res := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "http://localhost:8000/location?lat=44.09491559960329&lon=-123.0965916720434&acc=5&label=foo", nil)
 
-	LocationHandler(response, request)
+	LocationHandler(res, req)
 
-	if response.Code != http.StatusOK {
+	if res.Code != http.StatusOK {
 		t.Fatalf("Bad Response")
 	}
-	log.Println(response)
+	log.Println(res)
 }
 
 func Testrecordlocations(t *testing.T) {
-	values := url.Values{}
-	values.Set("acc", "5")
-	values.Set("lat", "44.09491559960329")
-	values.Set("lon", "-123.0965916720434")
-	values.Set("label", "foo")
+	vals := url.Values{}
+	vals.Set("acc", "5")
+	vals.Set("lat", "44.09491559960329")
+	vals.Set("lon", "-123.0965916720434")
+	vals.Set("label", "foo")
 
-	recordlocations(&values)
+	recordlocations(&vals)
 
-	var result Location
+	var res Location
 	query := "select label, acc, st_y(geom) lat, st_x(geom) lon from locations where label='foo' limit 1"
-	err := db.QueryRow(query).Scan(&result.label, &result.acc, &result.lat, &result.lon)
+	err := db.QueryRow(query).Scan(&res.label, &res.acc, &res.lat, &res.lon)
 	if err != nil {
 		log.Println(err)
 		t.Fatalf("could not talk to database")
 	}
 
-	if result.label != "foo" {
+	if res.label != "foo" {
 		t.Fatalf("label inserted does not match")
 	}
 
-	if result.acc != 5 {
+	if res.acc != 5 {
 		t.Fatalf("acc inserted does not match")
 	}
 
-	log.Println(result)
+	log.Println(res)
 }
 
 type Location struct {
@@ -74,16 +74,16 @@ type Location struct {
 func init() {
 	log.Println("smalld testing")
 
-	dbConnection := os.Getenv("SMALLD_DB_CONNECTION")
+	dbc := os.Getenv("SMALLD_DB_CONNECTION")
 	//urlBase := os.Getenv("SMALLD_URL_BASE")
 	//options := os.Getenv("SMALLD_OPTIONS") //override command line flags
 
-	log.Println("SMALLD_DB_CONNECTION:", dbConnection)
+	log.Println("SMALLD_DB_CONNECTION:", dbc)
 	//log.Println("SMALLD_URL_BASE:", urlBase)
 	//log.Println("SMALLD_OPTIONS:", options)
 
 	var err error
-	db, err = sql.Open("postgres", dbConnection)
+	db, err = sql.Open("postgres", dbc)
 	err = db.Ping()
 	if err != nil {
 		log.Fatal(err)
