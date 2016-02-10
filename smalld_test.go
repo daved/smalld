@@ -75,12 +75,12 @@ func init() {
 	log.Println("smalld testing")
 
 	dbConnection := os.Getenv("SMALLD_DB_CONNECTION")
-	urlBase := os.Getenv("SMALLD_URL_BASE")
-	options := os.Getenv("SMALLD_OPTIONS") //override command line flags
+	//urlBase := os.Getenv("SMALLD_URL_BASE")
+	//options := os.Getenv("SMALLD_OPTIONS") //override command line flags
 
 	log.Println("SMALLD_DB_CONNECTION:", dbConnection)
-	log.Println("SMALLD_URL_BASE:", urlBase)
-	log.Println("SMALLD_OPTIONS:", options)
+	//log.Println("SMALLD_URL_BASE:", urlBase)
+	//log.Println("SMALLD_OPTIONS:", options)
 
 	var err error
 	db, err = sql.Open("postgres", dbConnection)
