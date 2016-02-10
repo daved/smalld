@@ -13,7 +13,9 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var db *sql.DB //to share with our handlers
+type node struct {
+	db *sql.DB
+}
 
 func safeValues(v *url.Values) bool {
 	log.Printf("safe %+v", v)
@@ -27,8 +29,8 @@ func makePoint(v *url.Values) string {
 	return p
 }
 
-func recordlocations(v *url.Values) {
-	tx, err := db.Begin()
+func (n *node) recordlocations(v *url.Values) {
+	tx, err := n.db.Begin()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,7 +57,7 @@ func recordlocations(v *url.Values) {
 // LocationHandler is the main entry point for smalld
 // it receives the get request parses the location data from it
 // and logs the values to the location table.
-func LocationHandler(w http.ResponseWriter, req *http.Request) {
+func (n *node) LocationHandler(w http.ResponseWriter, req *http.Request) {
 	log.Println("handling url", req.URL)
 
 	if req.Method == "GET" {
@@ -70,12 +72,12 @@ func LocationHandler(w http.ResponseWriter, req *http.Request) {
 			if safeValues(&vals) {
 				p := makePoint(&vals)
 
-				go recordlocations(&vals)
+				go n.recordlocations(&vals)
 
 				log.Println("point:", p)
 
 				q := "select name from adminareas where st_contains(adminareas.geom, st_geomfromtext( $1 , 4326))"
-				rows, err := db.Query(q, p)
+				rows, err := n.db.Query(q, p)
 				if err != nil {
 					log.Print("db error", err)
 				}
@@ -113,6 +115,8 @@ func LocationHandler(w http.ResponseWriter, req *http.Request) {
 func main() {
 	log.Println("smalld starting")
 
+	n := &node{}
+
 	dbc := os.Getenv("SMALLD_DB_CONNECTION")
 	//urlBase := os.Getenv("SMALLD_URL_BASE")
 	addr := os.Getenv("SMALLD_LISTEN_ADDRESS")
@@ -124,14 +128,14 @@ func main() {
 	//log.Println("SMALLD_OPTIONS:", options)
 
 	var err error
-	db, err = sql.Open("postgres", dbc)
-	err = db.Ping()
+	n.db, err = sql.Open("postgres", dbc)
+	err = n.db.Ping()
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Println("connected to database")
 
-	http.HandleFunc("/location", LocationHandler)
+	http.HandleFunc("/location", n.LocationHandler)
 	log.Println("registered LocationHandler")
 
 	http.ListenAndServe(addr, nil)
