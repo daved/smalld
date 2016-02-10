@@ -1,13 +1,14 @@
 package main
 
-import "os"
-import "log"
-import "testing"
-import "net/http"
-import "net/url"
-import "net/http/httptest"
 import (
 	"database/sql"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"net/url"
+	"os"
+	"testing"
+
 	_ "github.com/lib/pq"
 )
 
