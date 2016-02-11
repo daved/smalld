@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/codemodus/catena"
 )
 
 type rawNode struct {
@@ -35,11 +37,43 @@ func NewNode(rn *rawNode) (*node, error) {
 }
 
 func (n *node) setMux() error {
+	c := catena.New(n.reco, n.logging, n.origin)
+
 	n.mux = http.NewServeMux()
 
-	n.mux.HandleFunc("/location", n.LocationHandler)
+	n.mux.Handle("/location", c.EndFn(n.LocationHandler))
 
 	return nil
+}
+
+func (n *node) reco(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				n.se.Printf("panic: %+v\n", err)
+
+				http.Error(w, http.StatusText(500), 500)
+			}
+		}()
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (n *node) logging(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		n.so.Printf("handling url %s\n", r.URL)
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (n *node) origin(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (n *node) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -49,21 +83,19 @@ func (n *node) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // LocationHandler is the main entry point for smalld
 // it receives the get request parses the location data from it
 // and logs the values to the location table.
-func (n *node) LocationHandler(w http.ResponseWriter, req *http.Request) {
-	n.so.Println("handling url", req.URL)
-
-	if req.Method != "GET" {
+func (n *node) LocationHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
 		http.Error(w, http.StatusText(405), 405)
 		return
 	}
 
 	txt422 := "bad or missing parameters"
-	if req.URL.RawQuery == "" {
+	if r.URL.RawQuery == "" {
 		http.Error(w, txt422, 422)
 		return
 	}
 
-	vals, err := url.ParseQuery(req.URL.RawQuery)
+	vals, err := url.ParseQuery(r.URL.RawQuery)
 	if err != nil {
 		http.Error(w, txt422, 422)
 		return
@@ -87,15 +119,13 @@ func (n *node) LocationHandler(w http.ResponseWriter, req *http.Request) {
 	m := make(map[string][]string)
 	m["names"] = ls
 
-	j, err := json.Marshal(m)
+	b, err := json.Marshal(m)
 	if err != nil {
-		log.Fatal(err)
+		http.Error(w, http.StatusText(500), 500)
+		return
 	}
 
-	h := w.Header()
-	h.Add("Access-Control-Allow-Origin", "*")
-
-	w.Write(j)
+	w.Write(b)
 }
 
 func labelAccPoint(v url.Values) (string, float64, string, error) {
