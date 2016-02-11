@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 
 	"github.com/codemodus/catena"
@@ -23,7 +25,21 @@ type node struct {
 }
 
 func NewNode(rn *rawNode) (*node, error) {
-	// TODO: validate s.
+	if rn == nil {
+		return nil, errors.New("rawNode must not be nil")
+	}
+
+	if rn.db == nil {
+		return nil, errors.New("rawNode db must not be nil")
+	}
+
+	if rn.so == nil {
+		rn.so = log.New(os.Stdout, "", log.LstdFlags)
+	}
+
+	if rn.se == nil {
+		rn.se = log.New(os.Stdout, "", log.LstdFlags)
+	}
 
 	n := &node{
 		rawNode: rn,
@@ -108,7 +124,11 @@ func (n *node) LocationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Println(l, a, p)
-	go n.db.AddLocations(l, a, p)
+	go func() {
+		if err := n.db.AddLocations(l, a, p); err != nil {
+			n.se.Println(err)
+		}
+	}()
 
 	ls, err := n.db.LocationsNameByPoint(p)
 	if err != nil {
@@ -136,7 +156,7 @@ func labelAccPoint(v url.Values) (string, float64, string, error) {
 		return "", 0, "", err
 	}
 
-	p := fmt.Sprintf("POINT(%s %s)", v.Get("lon"), v.Get("lat"))
+	p := fmt.Sprintf("POINT(%s %s)", v.Get("lat"), v.Get("lon"))
 
 	return l, a, p, nil
 }
