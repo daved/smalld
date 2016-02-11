@@ -12,6 +12,7 @@ import (
 type rawNode struct {
 	db smalldDB
 	so *log.Logger
+	se *log.Logger
 }
 
 type node struct {
