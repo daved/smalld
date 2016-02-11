@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"net/http"
 	"os"
@@ -19,8 +18,7 @@ func main() {
 	//options := os.Getenv("SMALLD_OPTIONS") //override command line flags
 
 	so.Println("connecting to database")
-	db, err := sql.Open("postgres", dbc)
-	err = db.Ping()
+	db, err := newDB(dbc)
 	if err != nil {
 		so.Fatalln(err)
 	}
