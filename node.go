@@ -3,12 +3,10 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
 
 	"github.com/codemodus/catena"
 )
@@ -113,7 +111,14 @@ func (n *node) LocationHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	loc, err := locFromVals(vals)
+	locVals := &locationVals{
+		label: vals.Get("label"),
+		acc:   vals.Get("acc"),
+		lat:   vals.Get("lat"),
+		lon:   vals.Get("lon"),
+	}
+
+	loc, err := newLocationFromVals(locVals)
 	if err != nil {
 		http.Error(w, txt422, 422)
 		return
@@ -141,25 +146,4 @@ func (n *node) LocationHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(b)
-}
-
-func locFromVals(v url.Values) (*location, error) {
-	l := fmt.Sprintf("%s", v.Get("label"))
-
-	a, err := strconv.ParseFloat(v.Get("acc"), 64)
-	if err != nil {
-		return nil, err
-	}
-
-	lat, err := strconv.ParseFloat(v.Get("lat"), 64)
-	if err != nil {
-		return nil, err
-	}
-
-	lon, err := strconv.ParseFloat(v.Get("lon"), 64)
-	if err != nil {
-		return nil, err
-	}
-
-	return newLocation(l, a, lat, lon), nil
 }

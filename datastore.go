@@ -2,10 +2,19 @@ package main
 
 import (
 	"database/sql"
+	"errors"
+	"strconv"
 	"time"
 
 	"github.com/jmoiron/sqlx"
 )
+
+type locationVals struct {
+	label string
+	acc   string
+	lat   string
+	lon   string
+}
 
 type location struct {
 	ID       uint64
@@ -21,6 +30,29 @@ func newLocation(label string, acc, lat, lon float64) *location {
 		Acc:   acc,
 		Point: &geoPoint{lat, lon},
 	}
+}
+
+func newLocationFromVals(v *locationVals) (*location, error) {
+	if v.label == "" {
+		return nil, errors.New("label must not be empty")
+	}
+
+	a, err := strconv.ParseFloat(v.acc, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	lat, err := strconv.ParseFloat(v.lat, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	lon, err := strconv.ParseFloat(v.lon, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	return newLocation(v.label, a, lat, lon), nil
 }
 
 type adminArea struct {
