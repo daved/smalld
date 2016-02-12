@@ -30,7 +30,7 @@ func TestNodeMux(t *testing.T) {
 	n := &node{}
 	n.setMux()
 	if n.mux == nil {
-		t.Fatalf("want mux, got nil")
+		t.Fatalf("want mux set, got nil")
 	}
 }
 
@@ -97,6 +97,48 @@ func TestNodeReco(t *testing.T) {
 	})
 
 	n.reco(ph).ServeHTTP(w, r)
+}
+
+func TestNotFoundHandler(t *testing.T) {
+	rn := &rawNode{
+		db: &MockSDB{},
+		se: log.New(ioutil.Discard, "", 0),
+	}
+
+	n, err := newNode(rn)
+	if err != nil {
+		t.Fatalf("want nil, got %s", err)
+	}
+
+	w := httptest.NewRecorder()
+	r, _ := http.NewRequest("GET", "", nil)
+	n.NotFoundHandler(w, r)
+
+	want := 404
+	if w.Code != want {
+		t.Fatalf("want %d, got %d", want, w.Code)
+	}
+}
+
+func TestMethNAHandler(t *testing.T) {
+	rn := &rawNode{
+		db: &MockSDB{},
+		se: log.New(ioutil.Discard, "", 0),
+	}
+
+	n, err := newNode(rn)
+	if err != nil {
+		t.Fatalf("want nil, got %s", err)
+	}
+
+	w := httptest.NewRecorder()
+	r, _ := http.NewRequest("GET", "", nil)
+	n.MethNAHandler(w, r)
+
+	want := 405
+	if w.Code != want {
+		t.Fatalf("want %d, got %d", want, w.Code)
+	}
 }
 
 func TestNodeLocationHandler(t *testing.T) {
