@@ -156,16 +156,33 @@ func TestNodeLocationHandler(t *testing.T) {
 	r, _ := http.NewRequest("GET", "", nil)
 	n.LocationHandler(w, r)
 
+	want := 422
+	if w.Code != want {
+		t.Fatalf("want %d, got %d", want, w.Code)
+	}
+
 	qv := r.URL.Query()
 	qv.Set("lat", "44.09491559960329")
 	qv.Set("lon", "-123.0965916720434")
 	qv.Set("acc", "5")
 	r.URL.RawQuery = qv.Encode()
 
+	w = httptest.NewRecorder()
 	n.LocationHandler(w, r)
+
+	want = 422
+	if w.Code != want {
+		t.Fatalf("want %d, got %d", want, w.Code)
+	}
 
 	qv.Set("label", "foo")
 	r.URL.RawQuery = qv.Encode()
 
+	w = httptest.NewRecorder()
 	n.LocationHandler(w, r)
+
+	want = 200
+	if w.Code != want {
+		t.Fatalf("want %d, got %d", want, w.Code)
+	}
 }
