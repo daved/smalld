@@ -20,7 +20,7 @@ func TestNewNode(t *testing.T) {
 		t.Fatalf("want error, got nil")
 	}
 
-	rn.db = &sDB{}
+	rn.db = &MockSDB{}
 	if _, err := newNode(rn); err != nil {
 		t.Fatalf("want nil, got %s", err)
 	}
@@ -37,7 +37,7 @@ func TestNodeMux(t *testing.T) {
 func TestNodeLogging(t *testing.T) {
 	b := &bytes.Buffer{}
 	rn := &rawNode{
-		db: &sDB{},
+		db: &MockSDB{},
 		so: log.New(b, "", 0),
 	}
 
@@ -59,7 +59,7 @@ func TestNodeLogging(t *testing.T) {
 
 func TestNodeOrigin(t *testing.T) {
 	rn := &rawNode{
-		db: &sDB{},
+		db: &MockSDB{},
 	}
 
 	n, err := newNode(rn)
@@ -80,7 +80,7 @@ func TestNodeOrigin(t *testing.T) {
 
 func TestNodeReco(t *testing.T) {
 	rn := &rawNode{
-		db: &sDB{},
+		db: &MockSDB{},
 		se: log.New(ioutil.Discard, "", 0),
 	}
 
@@ -97,4 +97,33 @@ func TestNodeReco(t *testing.T) {
 	})
 
 	n.reco(ph).ServeHTTP(w, r)
+}
+
+func TestNodeLocationHandler(t *testing.T) {
+	rn := &rawNode{
+		db: &MockSDB{},
+		se: log.New(ioutil.Discard, "", 0),
+	}
+
+	n, err := newNode(rn)
+	if err != nil {
+		t.Fatalf("want nil, got %s", err)
+	}
+
+	w := httptest.NewRecorder()
+	r, _ := http.NewRequest("GET", "", nil)
+	n.LocationHandler(w, r)
+
+	qv := r.URL.Query()
+	qv.Set("lat", "44.09491559960329")
+	qv.Set("lon", "-123.0965916720434")
+	qv.Set("acc", "5")
+	r.URL.RawQuery = qv.Encode()
+
+	n.LocationHandler(w, r)
+
+	qv.Set("label", "foo")
+	r.URL.RawQuery = qv.Encode()
+
+	n.LocationHandler(w, r)
 }

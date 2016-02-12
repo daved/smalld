@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 
 	"github.com/codemodus/catena"
@@ -111,22 +110,18 @@ func (n *node) MethNAHandler(w http.ResponseWriter, r *http.Request) {
 // and logs the values to the location table.
 func (n *node) LocationHandler(w http.ResponseWriter, r *http.Request) {
 	txt422 := "bad or missing parameters"
-	if r.URL.RawQuery == "" {
-		http.Error(w, txt422, 422)
-		return
-	}
 
-	vals, err := url.ParseQuery(r.URL.RawQuery)
-	if err != nil {
+	qv := r.URL.Query()
+	if len(qv) == 0 {
 		http.Error(w, txt422, 422)
 		return
 	}
 
 	locVals := &locationVals{
-		label: vals.Get("label"),
-		acc:   vals.Get("acc"),
-		lat:   vals.Get("lat"),
-		lon:   vals.Get("lon"),
+		label: qv.Get("label"),
+		acc:   qv.Get("acc"),
+		lat:   qv.Get("lat"),
+		lon:   qv.Get("lon"),
 	}
 
 	loc, err := newLocationFromVals(locVals)
