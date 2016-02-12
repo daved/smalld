@@ -24,7 +24,7 @@ type node struct {
 	mux *http.ServeMux
 }
 
-func NewNode(rn *rawNode) (*node, error) {
+func newNode(rn *rawNode) (*node, error) {
 	if rn == nil {
 		return nil, errors.New("rawNode must not be nil")
 	}
@@ -45,21 +45,17 @@ func NewNode(rn *rawNode) (*node, error) {
 		rawNode: rn,
 	}
 
-	if err := n.setMux(); err != nil {
-		return nil, err
-	}
+	n.setMux()
 
 	return n, nil
 }
 
-func (n *node) setMux() error {
+func (n *node) setMux() {
 	c := catena.New(n.reco, n.logging, n.origin)
 
 	n.mux = http.NewServeMux()
 
 	n.mux.Handle("/location", c.EndFn(n.LocationHandler))
-
-	return nil
 }
 
 func (n *node) reco(next http.Handler) http.Handler {

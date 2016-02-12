@@ -81,7 +81,7 @@ func main() {
 		se: se,
 	}
 
-	n, err := NewNode(rn)
+	n, err := newNode(rn)
 	if err != nil {
 		se.Fatalln(err)
 	}
