@@ -1,18 +1,36 @@
 package main
 
 import (
-	"database/sql"
-	"log"
-	"net/http"
-	"net/http/httptest"
-	"net/url"
-	"os"
 	"testing"
 
 	_ "github.com/lib/pq"
 )
 
-func TestLocationHandlerResponseOK(t *testing.T) {
+func TestNewOptions(t *testing.T) {
+	o := newOptions()
+	if o == nil {
+		t.Fatalf("want *options, got nil")
+	}
+}
+
+func TestOptionsValidate(t *testing.T) {
+	o := newOptions()
+	if err := o.validate(); err == nil {
+		t.Fatalf("want error, got nil")
+	}
+
+	o.dbc = "x"
+	if err := o.validate(); err == nil {
+		t.Fatalf("want error, got nil")
+	}
+
+	o.addr = "x"
+	if err := o.validate(); err != nil {
+		t.Fatalf("want nil, got %s", err)
+	}
+}
+
+/*func TestLocationHandlerResponseOK(t *testing.T) {
 	res := httptest.NewRecorder()
 	req, _ := http.NewRequest("GET", "/location", nil)
 
@@ -90,4 +108,4 @@ func init() {
 	}
 
 	log.Println("connected to database")
-}
+}*/

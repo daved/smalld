@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -12,10 +11,9 @@ import (
 )
 
 type options struct {
-	dbc   string
-	dbcFN string
-	dbcEV string
-
+	dbc    string
+	dbcFN  string
+	dbcEV  string
 	addr   string
 	addrFN string
 	addrEV string
@@ -24,28 +22,15 @@ type options struct {
 }
 
 func newOptions() *options {
-	o := &options{
+	return &options{
 		dbcFN:  "dbconf",
 		dbcEV:  "SMALLD_DB_CONNECTION",
 		addrFN: "port",
 		addrEV: "SMALLD_LISTEN_ADDRESS",
 	}
-
-	flag.StringVar(&o.dbc, o.dbcFN, os.Getenv(o.dbcEV),
-		"database configuration (postgres)")
-	flag.StringVar(&o.addr, o.addrFN, os.Getenv(o.addrEV),
-		"port to listen for http requests")
-
-	flag.Parse()
-
-	return o
 }
 
 func (o *options) validate() error {
-	if o == nil {
-		return errors.New("options must not be nil")
-	}
-
 	if o.dbc == "" {
 		return fmt.Errorf(
 			"database configuration must be set using flag %s or env var %s",
@@ -68,14 +53,23 @@ func (o *options) validate() error {
 func main() {
 	so := log.New(os.Stdout, "", log.LstdFlags)
 	se := log.New(os.Stderr, "", log.LstdFlags)
+
 	so.Println("smalld starting")
 
 	o := newOptions()
+
+	flag.StringVar(&o.dbc, o.dbcFN, os.Getenv(o.dbcEV),
+		"database configuration (postgres)")
+	flag.StringVar(&o.addr, o.addrFN, os.Getenv(o.addrEV),
+		"port to listen for http requests")
+	flag.Parse()
+
 	if err := o.validate(); err != nil {
 		se.Fatalln(err)
 	}
 
 	so.Println("connecting to database")
+
 	db, err := newDB(o.dbc)
 	if err != nil {
 		se.Fatalln(err)
