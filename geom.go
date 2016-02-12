@@ -14,7 +14,7 @@ type geoPoint struct {
 }
 
 func (p *geoPoint) String() string {
-	return fmt.Sprintf("POINT(%f %f)", p.Lat, p.Lon)
+	return fmt.Sprintf("POINT(%f %f)", p.Lon, p.Lat)
 }
 
 func (p *geoPoint) Value() (driver.Value, error) {

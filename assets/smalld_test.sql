@@ -1,17 +1,17 @@
 --intended to execute on the build server 
-CREATE TABLE adminareas (
-    gid integer,
-    osm_id character varying(20),
-    name character varying(100)
-);
+--CREATE TABLE adminareas (
+--    gid integer,
+--    osm_id character varying(20),
+--    name character varying(100)
+--);
 --using AddGeometryColumn since drone.io has stale postgis
-select AddGeometryColumn('public','adminareas','geom', 4326, 'MULTIPOLYGON', 2);
+--select AddGeometryColumn('public','adminareas','geom', 4326, 'MULTIPOLYGON', 2);
 
-create table locations ( 
-       id serial primary key,
-       label text,
-       acc numeric );
-select AddGeometryColumn ( 'locations', 'geom', 4326, 'POINT', 2);
+--create table locations ( 
+--       id serial primary key,
+--       label text,
+--       acc numeric );
+--select AddGeometryColumn ( 'locations', 'geom', 4326, 'POINT', 2);
 
 
 --

@@ -35,7 +35,7 @@ type adminArea struct {
 
 type smalldDB interface {
 	AddLocations(*location) error
-	LocationsNameByPoint(string) ([]string, error)
+	AdminAreasByPoint(*geoPoint) ([]string, error)
 }
 
 type sDB struct {
@@ -78,7 +78,7 @@ values ( $1, $2, ST_PointFromText( $3, 4326) )`, l.Label, l.Acc, l.Point)
 	}
 
 	err = tx.Commit()
-	// START TEST location Scan implementation
+	/* // START TEST location Scan implementation
 	if err != nil {
 		return err
 	}
@@ -88,14 +88,14 @@ values ( $1, $2, ST_PointFromText( $3, 4326) )`, l.Label, l.Acc, l.Point)
 		return err
 	}
 
-	// fmt.Println(nl)
+	fmt.Println(nl)
 
-	// END TEST location Scan implementation
+	// END TEST location Scan implementation */
 
 	return err
 }
 
-func (sdb *sDB) LocationsNameByPoint(point string) ([]string, error) {
+func (sdb *sDB) AdminAreasByPoint(point *geoPoint) ([]string, error) {
 	q := `select name from adminareas
 where st_contains(adminareas.geom, st_geomfromtext( $1 , 4326))`
 

@@ -129,7 +129,7 @@ func (n *node) LocationHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	ls, err := n.db.LocationsNameByPoint(loc.Point.String())
+	ls, err := n.db.AdminAreasByPoint(loc.Point)
 	if err != nil {
 		http.Error(w, http.StatusText(500), 500)
 		return
