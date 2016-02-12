@@ -12,12 +12,12 @@ import (
 func TestNewNode(t *testing.T) {
 	var rn *rawNode
 	if _, err := newNode(rn); err == nil {
-		t.Fatalf("want error, got nil")
+		t.Fatal("want error, got nil")
 	}
 
 	rn = &rawNode{}
 	if _, err := newNode(rn); err == nil {
-		t.Fatalf("want error, got nil")
+		t.Fatal("want error, got nil")
 	}
 
 	rn.db = &MockSDB{}
@@ -30,7 +30,7 @@ func TestNodeMux(t *testing.T) {
 	n := &node{}
 	n.setMux()
 	if n.mux == nil {
-		t.Fatalf("want mux set, got nil")
+		t.Fatal("want mux set, got nil")
 	}
 }
 
@@ -53,7 +53,7 @@ func TestNodeLogging(t *testing.T) {
 
 	l := b.Len()
 	if l == 0 {
-		t.Fatalf("log is empty")
+		t.Fatal("log is empty")
 	}
 }
 
@@ -74,7 +74,7 @@ func TestNodeOrigin(t *testing.T) {
 
 	oh := w.Header().Get("Access-Control-Allow-Origin")
 	if len(oh) == 0 {
-		t.Fatalf("ACAOrigin header empty")
+		t.Fatal("ACAOrigin header empty")
 	}
 }
 
