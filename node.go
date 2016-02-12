@@ -117,20 +117,19 @@ func (n *node) LocationHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	l, a, p, err := labelAccPoint(vals)
+	loc, err := locFromVals(vals)
 	if err != nil {
 		http.Error(w, txt422, 422)
 		return
 	}
 
-	fmt.Println(l, a, p)
 	go func() {
-		if err := n.db.AddLocations(l, a, p); err != nil {
+		if err := n.db.AddLocations(loc); err != nil {
 			n.se.Println(err)
 		}
 	}()
 
-	ls, err := n.db.LocationsNameByPoint(p)
+	ls, err := n.db.LocationsNameByPoint(loc.Point.String())
 	if err != nil {
 		http.Error(w, http.StatusText(500), 500)
 		return
@@ -148,15 +147,23 @@ func (n *node) LocationHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(b)
 }
 
-func labelAccPoint(v url.Values) (string, float64, string, error) {
+func locFromVals(v url.Values) (*location, error) {
 	l := fmt.Sprintf("%s", v.Get("label"))
 
 	a, err := strconv.ParseFloat(v.Get("acc"), 64)
 	if err != nil {
-		return "", 0, "", err
+		return nil, err
 	}
 
-	p := fmt.Sprintf("POINT(%s %s)", v.Get("lat"), v.Get("lon"))
+	lat, err := strconv.ParseFloat(v.Get("lat"), 64)
+	if err != nil {
+		return nil, err
+	}
 
-	return l, a, p, nil
+	lon, err := strconv.ParseFloat(v.Get("lon"), 64)
+	if err != nil {
+		return nil, err
+	}
+
+	return newLocation(l, a, lat, lon), nil
 }

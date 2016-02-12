@@ -11,18 +11,16 @@ type location struct {
 	ID       uint64
 	Label    sql.NullString
 	Acc      float64
-	Point    geoPoint `db:"geom"`
+	Point    *geoPoint `db:"geom"`
 	Received time.Time
 }
 
-func newLocation(label string, acc, lat, lon float64) (*location, error) {
-	l := &location{
+func newLocation(label string, acc, lat, lon float64) *location {
+	return &location{
 		Label: sql.NullString{label, true},
 		Acc:   acc,
-		Point: geoPoint{lat, lon},
+		Point: &geoPoint{lat, lon},
 	}
-
-	return l, nil
 }
 
 type adminArea struct {
@@ -36,7 +34,7 @@ type adminArea struct {
 }
 
 type smalldDB interface {
-	AddLocations(string, float64, string) error
+	AddLocations(*location) error
 	LocationsNameByPoint(string) ([]string, error)
 }
 
@@ -67,19 +65,32 @@ func newDB(dbc string) (smalldDB, error) {
 	return &sDB{d}, nil
 }
 
-func (sdb *sDB) AddLocations(label string, acc float64, point string) error {
+func (sdb *sDB) AddLocations(l *location) error {
 	tx, err := sdb.Begin()
 	if err != nil {
 		return err
 	}
 
 	_, err = tx.Exec(`insert into locations ( label, acc, geom )
-values ( $1, $2, ST_PointFromText( $3, 4326) )`, label, acc, point)
+values ( $1, $2, ST_PointFromText( $3, 4326) )`, l.Label, l.Acc, l.Point)
 	if err != nil {
 		return err
 	}
 
 	err = tx.Commit()
+	// START TEST location Scan implementation
+	if err != nil {
+		return err
+	}
+
+	nl := &location{}
+	if err := sdb.QueryRowx("select * from locations limit 1").StructScan(nl); err != nil {
+		return err
+	}
+
+	// fmt.Println(nl)
+
+	// END TEST location Scan implementation
 
 	return err
 }
