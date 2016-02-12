@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/codemodus/catena"
+	"github.com/codemodus/mixmux"
 )
 
 type rawNode struct {
@@ -19,7 +20,7 @@ type rawNode struct {
 
 type node struct {
 	*rawNode
-	mux *http.ServeMux
+	mux *mixmux.Router
 }
 
 func newNode(rn *rawNode) (*node, error) {
@@ -49,11 +50,18 @@ func newNode(rn *rawNode) (*node, error) {
 }
 
 func (n *node) setMux() {
+	opts := &mixmux.Options{
+		RedirectTrailingSlash:  true,
+		RedirectFixedPath:      true,
+		HandleMethodNotAllowed: true,
+		MethodNotAllowed:       http.HandlerFunc(n.MethNAHandler),
+		NotFound:               http.HandlerFunc(n.NotFoundHandler),
+	}
+	n.mux = mixmux.NewRouter(opts)
+
 	c := catena.New(n.reco, n.logging, n.origin)
 
-	n.mux = http.NewServeMux()
-
-	n.mux.Handle("/location", c.EndFn(n.LocationHandler))
+	n.mux.Get("/location", c.EndFn(n.LocationHandler))
 }
 
 func (n *node) reco(next http.Handler) http.Handler {
@@ -90,15 +98,18 @@ func (n *node) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	n.mux.ServeHTTP(w, r)
 }
 
+func (n *node) NotFoundHandler(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, http.StatusText(404), 404)
+}
+
+func (n *node) MethNAHandler(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, http.StatusText(405), 405)
+}
+
 // LocationHandler is the main entry point for smalld
 // it receives the get request parses the location data from it
 // and logs the values to the location table.
 func (n *node) LocationHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, http.StatusText(405), 405)
-		return
-	}
-
 	txt422 := "bad or missing parameters"
 	if r.URL.RawQuery == "" {
 		http.Error(w, txt422, 422)
