@@ -10,6 +10,10 @@ func (mdb *MockSDB) RollBack() (n int, err error) {
 	return 0, nil
 }
 
+func (mdb *MockSDB) Populate() error {
+	return nil
+}
+
 func (mdb *MockSDB) AddLocations(l *Location) error {
 	return nil
 }
