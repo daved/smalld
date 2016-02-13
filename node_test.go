@@ -116,7 +116,7 @@ func TestNotFoundHandler(t *testing.T) {
 	r, _ := http.NewRequest("GET", "", nil)
 	n.NotFoundHandler(w, r)
 
-	want := 404
+	want := http.StatusNotFound
 	if w.Code != want {
 		t.Fatalf("want %d, got %d", want, w.Code)
 	}
@@ -137,7 +137,7 @@ func TestMethNAHandler(t *testing.T) {
 	r, _ := http.NewRequest("GET", "", nil)
 	n.MethNAHandler(w, r)
 
-	want := 405
+	want := http.StatusMethodNotAllowed
 	if w.Code != want {
 		t.Fatalf("want %d, got %d", want, w.Code)
 	}
@@ -158,7 +158,7 @@ func TestNodeLocationHandler(t *testing.T) {
 	r, _ := http.NewRequest("GET", "", nil)
 	n.LocationHandler(w, r)
 
-	want := 422
+	want := httpStatusUnprocessableEntity
 	if w.Code != want {
 		t.Fatalf("want %d, got %d", want, w.Code)
 	}
@@ -172,7 +172,7 @@ func TestNodeLocationHandler(t *testing.T) {
 	w = httptest.NewRecorder()
 	n.LocationHandler(w, r)
 
-	want = 422
+	want = httpStatusUnprocessableEntity
 	if w.Code != want {
 		t.Fatalf("want %d, got %d", want, w.Code)
 	}
@@ -183,7 +183,7 @@ func TestNodeLocationHandler(t *testing.T) {
 	w = httptest.NewRecorder()
 	n.LocationHandler(w, r)
 
-	want = 200
+	want = http.StatusOK
 	if w.Code != want {
 		t.Fatalf("want %d, got %d", want, w.Code)
 	}

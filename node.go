@@ -12,6 +12,20 @@ import (
 	"github.com/laprice/smalld/sdb"
 )
 
+const (
+	httpStatusUnprocessableEntity = 422
+)
+
+var (
+	httpStatusText = map[int]string{
+		422: "Unprocessable Entity",
+	}
+)
+
+func HttpStatusText(code int) string {
+	return httpStatusText[code]
+}
+
 type rawNode struct {
 	db sdb.SmalldDB
 	so *log.Logger
@@ -70,7 +84,7 @@ func (n *node) reco(next http.Handler) http.Handler {
 			if err := recover(); err != nil {
 				n.se.Printf("panic: %+v\n", err)
 
-				http.Error(w, http.StatusText(500), 500)
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			}
 		}()
 
@@ -99,22 +113,20 @@ func (n *node) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (n *node) NotFoundHandler(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, http.StatusText(404), 404)
+	http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 }
 
 func (n *node) MethNAHandler(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, http.StatusText(405), 405)
+	http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 }
 
 // LocationHandler is the main entry point for smalld
 // it receives the get request parses the location data from it
 // and logs the values to the location table.
 func (n *node) LocationHandler(w http.ResponseWriter, r *http.Request) {
-	txt422 := "bad or missing parameters"
-
 	qv := r.URL.Query()
 	if len(qv) == 0 {
-		http.Error(w, txt422, 422)
+		http.Error(w, HttpStatusText(httpStatusUnprocessableEntity), httpStatusUnprocessableEntity)
 		return
 	}
 
@@ -127,7 +139,7 @@ func (n *node) LocationHandler(w http.ResponseWriter, r *http.Request) {
 
 	loc, err := sdb.NewLocationFromVals(locVals)
 	if err != nil {
-		http.Error(w, txt422, 422)
+		http.Error(w, HttpStatusText(httpStatusUnprocessableEntity), httpStatusUnprocessableEntity)
 		return
 	}
 
@@ -139,7 +151,7 @@ func (n *node) LocationHandler(w http.ResponseWriter, r *http.Request) {
 
 	ls, err := n.db.AdminAreasByPoint(loc.Point)
 	if err != nil {
-		http.Error(w, http.StatusText(500), 500)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
@@ -148,7 +160,7 @@ func (n *node) LocationHandler(w http.ResponseWriter, r *http.Request) {
 
 	b, err := json.Marshal(m)
 	if err != nil {
-		http.Error(w, http.StatusText(500), 500)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
