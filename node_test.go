@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/laprice/smalld/sdb"
 )
 
 func TestNewNode(t *testing.T) {
@@ -20,7 +22,7 @@ func TestNewNode(t *testing.T) {
 		t.Fatal("want error, got nil")
 	}
 
-	rn.db = &MockSDB{}
+	rn.db = &sdb.MockSDB{}
 	if _, err := newNode(rn); err != nil {
 		t.Fatalf("want nil, got %s", err)
 	}
@@ -37,7 +39,7 @@ func TestNodeMux(t *testing.T) {
 func TestNodeLogging(t *testing.T) {
 	b := &bytes.Buffer{}
 	rn := &rawNode{
-		db: &MockSDB{},
+		db: &sdb.MockSDB{},
 		so: log.New(b, "", 0),
 	}
 
@@ -59,7 +61,7 @@ func TestNodeLogging(t *testing.T) {
 
 func TestNodeOrigin(t *testing.T) {
 	rn := &rawNode{
-		db: &MockSDB{},
+		db: &sdb.MockSDB{},
 	}
 
 	n, err := newNode(rn)
@@ -80,7 +82,7 @@ func TestNodeOrigin(t *testing.T) {
 
 func TestNodeReco(t *testing.T) {
 	rn := &rawNode{
-		db: &MockSDB{},
+		db: &sdb.MockSDB{},
 		se: log.New(ioutil.Discard, "", 0),
 	}
 
@@ -101,7 +103,7 @@ func TestNodeReco(t *testing.T) {
 
 func TestNotFoundHandler(t *testing.T) {
 	rn := &rawNode{
-		db: &MockSDB{},
+		db: &sdb.MockSDB{},
 		se: log.New(ioutil.Discard, "", 0),
 	}
 
@@ -122,7 +124,7 @@ func TestNotFoundHandler(t *testing.T) {
 
 func TestMethNAHandler(t *testing.T) {
 	rn := &rawNode{
-		db: &MockSDB{},
+		db: &sdb.MockSDB{},
 		se: log.New(ioutil.Discard, "", 0),
 	}
 
@@ -143,7 +145,7 @@ func TestMethNAHandler(t *testing.T) {
 
 func TestNodeLocationHandler(t *testing.T) {
 	rn := &rawNode{
-		db: &MockSDB{},
+		db: &sdb.MockSDB{},
 		se: log.New(ioutil.Discard, "", 0),
 	}
 

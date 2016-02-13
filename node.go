@@ -9,10 +9,11 @@ import (
 
 	"github.com/codemodus/catena"
 	"github.com/codemodus/mixmux"
+	"github.com/laprice/smalld/sdb"
 )
 
 type rawNode struct {
-	db smalldDB
+	db sdb.SmalldDB
 	so *log.Logger
 	se *log.Logger
 }
@@ -117,14 +118,14 @@ func (n *node) LocationHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	locVals := &locationVals{
-		label: qv.Get("label"),
-		acc:   qv.Get("acc"),
-		lat:   qv.Get("lat"),
-		lon:   qv.Get("lon"),
+	locVals := &sdb.LocationVals{
+		Label: qv.Get("label"),
+		Acc:   qv.Get("acc"),
+		Lat:   qv.Get("lat"),
+		Lon:   qv.Get("lon"),
 	}
 
-	loc, err := newLocationFromVals(locVals)
+	loc, err := sdb.NewLocationFromVals(locVals)
 	if err != nil {
 		http.Error(w, txt422, 422)
 		return

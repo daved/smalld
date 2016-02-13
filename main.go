@@ -1,12 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/laprice/smalld/sdb"
 	_ "github.com/lib/pq"
 )
 
@@ -50,6 +52,8 @@ func (o *options) validate() error {
 	return nil
 }
 
+//go:generate go generate github.com/laprice/smalld/sdb
+
 func main() {
 	so := log.New(os.Stdout, "", log.LstdFlags)
 	se := log.New(os.Stderr, "", log.LstdFlags)
@@ -62,6 +66,11 @@ func main() {
 		"database configuration (postgres)")
 	flag.StringVar(&o.addr, o.addrFN, os.Getenv(o.addrEV),
 		"port to listen for http requests")
+	dbRB := flag.Bool("db-rollback", false,
+		`Rollback all database migrations.`)
+	dbPop := flag.Bool("db-populate", false,
+		`Install all database fixtures.`)
+
 	flag.Parse()
 
 	if err := o.validate(); err != nil {
@@ -70,9 +79,37 @@ func main() {
 
 	so.Println("connecting to database")
 
-	db, err := newDB(o.dbc)
+	dd, err := sql.Open("postgres", o.dbc)
 	if err != nil {
 		se.Fatalln(err)
+	}
+
+	db, err := sdb.New(dd)
+	if err != nil {
+		se.Fatalln(err)
+	}
+
+	ct, err := db.Migrate()
+	so.Printf("migrated database: %d file(s).\n", ct)
+	if err != nil {
+		se.Fatalln(err)
+	}
+
+	if *dbRB {
+		so.Println("rolling back database and exiting")
+		ct, err := db.RollBack()
+		so.Printf("rolled back database: %d file(s).\n", ct)
+		if err != nil {
+			se.Fatalln(err)
+		}
+		os.Exit(0)
+	}
+
+	if *dbPop {
+		so.Println("installing database fixtures")
+		if err = db.Populate(); err != nil {
+			se.Fatalln(err)
+		}
 	}
 
 	rn := &rawNode{

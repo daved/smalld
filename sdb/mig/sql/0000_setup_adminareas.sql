@@ -1,3 +1,6 @@
+-- +migrate Up
+-- +migrate StatementBegin
+
 CREATE SEQUENCE adminareas_gid_seq
     START WITH 1
     INCREMENT BY 1
@@ -18,20 +21,11 @@ CREATE TABLE adminareas (
 
 ALTER SEQUENCE adminareas_gid_seq OWNED BY adminareas.gid;
 
+-- +migrate StatementEnd
 
-CREATE SEQUENCE locations_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+-- +migrate Down
+-- +migrate StatementBegin
 
-CREATE TABLE locations (
-    id integer NOT NULL DEFAULT nextval('locations_id_seq'),
-    label text,
-    acc numeric,
-    geom geometry(Point,4326),
-    received timestamp without time zone DEFAULT now()
-);
+DROP TABLE adminareas;
 
-ALTER SEQUENCE locations_id_seq OWNED BY locations.id;
+-- +migrate StatementEnd

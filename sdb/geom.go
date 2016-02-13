@@ -1,4 +1,4 @@
-package main
+package sdb
 
 import (
 	"bytes"
@@ -8,20 +8,20 @@ import (
 	"fmt"
 )
 
-type geoPoint struct {
+type GeoPoint struct {
 	Lat float64
 	Lon float64
 }
 
-func (p *geoPoint) String() string {
+func (p *GeoPoint) String() string {
 	return fmt.Sprintf("POINT(%f %f)", p.Lon, p.Lat)
 }
 
-func (p *geoPoint) Value() (driver.Value, error) {
+func (p *GeoPoint) Value() (driver.Value, error) {
 	return p.String(), nil
 }
 
-func (p *geoPoint) Scan(val interface{}) error {
+func (p *GeoPoint) Scan(val interface{}) error {
 	b, err := hex.DecodeString(string(val.([]uint8)))
 	if err != nil {
 		return err
