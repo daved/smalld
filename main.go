@@ -13,22 +13,22 @@ import (
 )
 
 type options struct {
-	dbc    string
-	dbcFN  string
-	dbcEV  string
-	addr   string
-	addrFN string
-	addrEV string
+	dbc      string
+	dbcFlag  string
+	dbcEnv   string
+	addr     string
+	addrFlag string
+	addrEnv  string
 	// os.Getenv("SMALLD_URL_BASE")
 	// os.Getenv("SMALLD_OPTIONS")
 }
 
 func newOptions() *options {
 	return &options{
-		dbcFN:  "dbconf",
-		dbcEV:  "SMALLD_DB_CONNECTION",
-		addrFN: "port",
-		addrEV: "SMALLD_LISTEN_ADDRESS",
+		dbcFlag:  "dbconf",
+		dbcEnv:   "SMALLD_DB_CONNECTION",
+		addrFlag: "port",
+		addrEnv:  "SMALLD_LISTEN_ADDRESS",
 	}
 }
 
@@ -36,16 +36,16 @@ func (o *options) validate() error {
 	if o.dbc == "" {
 		return fmt.Errorf(
 			"database configuration must be set using flag %s or env var %s",
-			o.dbcFN,
-			o.dbcEV,
+			o.dbcFlag,
+			o.dbcEnv,
 		)
 	}
 
 	if o.addr == "" {
 		return fmt.Errorf(
 			"http listen port must be set using flag %s or env var %s",
-			o.addrFN,
-			o.addrEV,
+			o.addrFlag,
+			o.addrEnv,
 		)
 	}
 
@@ -62,9 +62,9 @@ func main() {
 
 	o := newOptions()
 
-	flag.StringVar(&o.dbc, o.dbcFN, os.Getenv(o.dbcEV),
+	flag.StringVar(&o.dbc, o.dbcFlag, os.Getenv(o.dbcEnv),
 		"database configuration (postgres)")
-	flag.StringVar(&o.addr, o.addrFN, os.Getenv(o.addrEV),
+	flag.StringVar(&o.addr, o.addrFlag, os.Getenv(o.addrEnv),
 		"port to listen for http requests")
 	dbRB := flag.Bool("db-rollback", false,
 		`Rollback all database migrations.`)
@@ -79,12 +79,12 @@ func main() {
 
 	so.Println("connecting to database")
 
-	dd, err := sql.Open("postgres", o.dbc)
+	p, err := sql.Open("postgres", o.dbc)
 	if err != nil {
 		se.Fatalln(err)
 	}
 
-	db, err := sdb.New(dd)
+	db, err := sdb.New(p)
 	if err != nil {
 		se.Fatalln(err)
 	}
